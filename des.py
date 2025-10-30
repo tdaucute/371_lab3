@@ -147,7 +147,16 @@ def string_to_bit_array(text):
     Example: 'A' -> [0,1,0,0,0,0,0,1]
     """
     # TODO: Implement string to bit array conversion
-    pass
+    bit_array = []
+    text = text.encode('latin-1')
+
+    for i in text:
+        bit = format(i, '08b')
+        
+        for j in bit:
+            bit_array.append(int(j))
+    
+    return bit_array
 
 
 def bit_array_to_string(array):
@@ -156,7 +165,23 @@ def bit_array_to_string(array):
     Example: [0,1,0,0,0,0,0,1] -> 'A'
     """
     # TODO: Implement bit array to string conversion
-    pass
+    string_list = []
+
+    for i in range(0, len(array), 8):
+        process_list = []
+        temp = array[i:i+8]
+
+        for j in temp:
+            process_list.append(str(j))
+        
+        process_string = "".join(process_list)
+        process_string = int(process_string, 2)
+        string_list.append(process_string)
+
+    string = bytes(string_list)
+    string = string.decode('latin-1')
+    
+    return string
 
 
 def binvalue(val, bitsize):
@@ -295,7 +320,11 @@ class des():
         Apply bitwise XOR between two lists of bits.
         """
         # TODO: Implement XOR
-        pass
+        result = []
+        for i in range(0, len(t1)):
+            result.append(t1[i] ^ t2[i])
+        
+        return result
 
     
     def generatekeys(self):
@@ -309,7 +338,16 @@ class des():
         5. Apply compression permutation (CP_2) to produce 16 subkeys
         """
         # TODO: Implement key schedule
-        pass
+        bit_array = string_to_bit_array(self.password)
+        bit_array = self.permut(bit_array, CP_1)
+        g, d = nsplit(bit_array, 28)
+
+        for i in SHIFT:
+            g_temp, d_temp = self.shift(g, d, i)
+            recombine = g_temp + d_temp
+            recombine = self.permut(recombine, CP_2)
+            self.keys.append(recombine)
+
 
     def shift(self, g, d, n): #Shift a list of the given value
         return g[n:] + g[:n], d[n:] + d[:n]
@@ -340,4 +378,29 @@ class des():
         Output: list of 4 bits
         """
         # TODO: Implement S-Box lookup
-        pass
+        row = 0
+        column = 0
+        result = []
+        power_row = 1
+        power_column = 3
+
+        row_select = str(block[0]) + str(block[5])
+        for i in row_select:
+            row += int(i)*(2**power_row)
+            power_row -= 1
+        
+        column_select = str(block[1]) + str(block[2]) + str(block[3]) + str(block[4])
+        for i in column_select:
+            column += int(i)*(2**power_column)
+            power_column -= 1
+
+        subs = S_BOX[round][row][column]
+        subs = binvalue(subs, 4)
+
+        for i in subs:
+            result.append(int(i))
+
+        return result
+
+
+        
