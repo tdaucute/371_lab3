@@ -1,22 +1,11 @@
-def gcd(a, b):
-    """
-    Compute the greatest common divisor of a and b.
-    """
-    # TODO: implement Euclidean algorithm
-    stop = 0
-    gcd = 0
+from RSA import encrypt, decrypt, generate_keypair
 
-    while (stop == 0):
-        c = a % b
+p, q = 3557, 2579
+public, private = generate_keypair(p, q)
+plaintext = "Hello World!"
 
-        if c == 0:
-            gcd = b
-            stop = 1
-        else:
-            a = b
-            b = c
-    
-    return gcd
+array = [1830186, 474009, 2963946, 2963946, 7480127, 16951, 3508237, 7480127, 1582356, 2963946, 6388304, 8264997]
+c = (2152519, 9173503)
 
+print(decrypt(c, array))
 
-print(gcd(61, 53))

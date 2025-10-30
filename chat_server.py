@@ -18,11 +18,15 @@ from RSA import decrypt
 # --- GPIO Setup (TODO: complete this section) ---
 # TODO: Choose the correct BCM pin for LED
 # TODO: Open gpiochip and claim output for the LED
+LED_PIN = 17
+h = lgpio.gpiochip_open(4)
+lgpio.gpio_claim_output(h, LED_PIN)
 
 def flash_led(duration=1.0):
     """TODO: Turn LED on, sleep, then off."""
-    pass
-
+    lgpio.gpio_write(h, LED_PIN, 1)
+    time.sleep(duration)
+    lgpio.gpio_write(h, LED_PIN, 0)
 
 # --- Socket setup ---
 HOST = "0.0.0.0"  # Listen on all interfaces
@@ -65,7 +69,13 @@ def main():
                 # TODO: Decrypt with RSA
                 # TODO: Print plaintext
                 # TODO: Flash LED
-                pass
+                _, ciphertext = message.split(":", 1)
+                ciphertext = ciphertext.split(",")
+                ciphertext = list(map(int, ciphertext))
+                print(f"[chat_server] Received cipher: {ciphertext}")
+                plaintext = decrypt(client_public_key, ciphertext)
+                print("[chat_server] Decrypted plaintext: " + plaintext)
+                flash_led()
 
             else:
                 print(f"[chat_server] Unknown message format: {message}")

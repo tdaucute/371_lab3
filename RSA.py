@@ -114,7 +114,7 @@ def encrypt(pk, plaintext):
 
     for i in plaintext:
         i = ord(i)
-        i = (i**e) % n
+        i = pow(i, e, n)
         ciphertext.append(i)
     
     return ciphertext
@@ -130,8 +130,9 @@ def decrypt(pk, ciphertext):
     d, n = pk
 
     for i in ciphertext:
-        i = (i**d) % n
-        plaintext_list.append(chr(i))
+        i = pow(i, d, n)
+        i = chr(i)
+        plaintext_list.append(i)
     
     plaintext = "".join(plaintext_list)
 
