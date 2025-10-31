@@ -1,11 +1,13 @@
-from RSA import encrypt, decrypt, generate_keypair
+file1 = "penguin.jpg"
+file2 = "penguin_decrypted.jpg"
 
-p, q = 3557, 2579
-public, private = generate_keypair(p, q)
-plaintext = "Hello World!"
+with open(file1, "rb") as f1, open(file2, "rb") as f2:
+    data1 = f1.read()
+    data2 = f2.read()
 
-array = [1830186, 474009, 2963946, 2963946, 7480127, 16951, 3508237, 7480127, 1582356, 2963946, 6388304, 8264997]
-c = (2152519, 9173503)
+if data1 == data2:
+    print("Files are exactly the same!")
+else:
+    print("Files are different.")
 
-print(decrypt(c, array))
 

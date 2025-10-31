@@ -14,16 +14,21 @@ import socket
 import time
 import lgpio
 
-from RSA import generate_keypair
+from RSA import generate_keypair, encrypt
 from des import des
 
 # --- GPIO Setup (TODO: complete this section) ---
 # TODO: Choose the correct BCM pin for the buzzer
 # TODO: Open gpiochip and claim output for the buzzer
+BUZZER_PIN = 27
+h = lgpio.gpiochip_open(4)
+lgpio.gpio_claim_output(h, BUZZER_PIN)
 
 def buzz(duration=0.3):
     """TODO: Buzzer ON -> sleep -> OFF"""
-    pass
+    lgpio.gpio_write(h, BUZZER_PIN, 1)
+    time.sleep(duration)
+    lgpio.gpio_write(h, BUZZER_PIN, 0)
 
 # --- RSA setup ---
 p, q = 3557, 2579
@@ -40,6 +45,9 @@ with open("penguin.jpg", "rb") as f:
 # TODO: Convert image_bytes to string (latin-1 safe)
 # TODO: Encrypt with DES (use padding=True, cbc=True)
 # TODO: Encrypt DES key with RSA
+img_string = image_bytes.decode('latin-1')
+img_estring = cipher.run_cbc(key=des_key, text=img_string, padding=True)
+des_ekey = encrypt(private, des_key)
 
 # --- Socket setup ---
 HOST = "127.0.0.1"
@@ -52,12 +60,24 @@ def main():
 
     # Step 1: Send RSA public key
     # TODO
+    e, n = public
+    key_msg = f"KEY:{e},{n}"
+    client.sendall(key_msg.encode("utf-8"))
+    print(f"[image_client] Sent public key: ({e}, {n})")
 
     # Step 2: Send encrypted DES key
     # TODO
+    des_ekey_str = ",".join(map(str, des_ekey))
+    des_ekey_msg = "DESKEY:" + des_ekey_str
+    client.sendall(des_ekey_msg.encode("utf-8"))
+    print("[image_client] Sent encrypted DES key")
 
     # Step 3: Send encrypted image
     # TODO
+
+    img_msg = "IMAGE:" + img_estring
+    client.sendall(img_msg.encode("utf-8"))
+    print("[image_client] Sent encrypted image")
 
     # Feedback
     buzz()

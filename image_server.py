@@ -16,14 +16,22 @@ import time
 import lgpio
 
 from des import des
+from RSA import decrypt
 
 # --- GPIO Setup (TODO: complete this section) ---
 # TODO: Choose the correct BCM pin for the LED
 # TODO: Open gpiochip and claim output for the LED
+LED_PIN = 17
+h = lgpio.gpiochip_open(4)
+lgpio.gpio_claim_output(h, LED_PIN)
 
 def flash_led(times=2, duration=0.3):
     """TODO: LED ON/OFF blinking"""
-    pass
+    for i in range(times):
+        lgpio.gpio_write(h, LED_PIN, 1)
+        time.sleep(duration)
+        lgpio.gpio_write(h, LED_PIN, 0)
+        time.sleep(duration)
 
 
 # --- Socket setup ---
@@ -59,12 +67,28 @@ def main():
 
                 if message.startswith("KEY:"):
                     # TODO: Parse e,n and store client_public_key
-                    pass
+                    idx = message.find('DESKEY')
+                    key_msg = message[:idx]
+                    buffer = message[idx:] + "\n" + buffer
+                    _, pk = key_msg.split(":", 1)
+                    e, n = pk.split(",", 1)
+                    client_public_key = (int(e), int(n))
+                    print(f"[image_server] Received client PUBLIC key: {client_public_key}")
 
 
                 elif message.startswith("DESKEY:"):
                     # TODO: Decrypt DES key using RSA
-                    pass
+                    idx = message.find('IMAGE')
+                    deskey_msg = message[:idx]
+                    buffer = message[idx:] + "\n" + buffer
+                    _, cp_deskey = deskey_msg.split(":", 1)
+                    cp_deskey = cp_deskey.split(",")
+                    cp_deskey = list(map(int, cp_deskey))
+                    deskey_count = len(cp_deskey)
+                    print(f"[image_server] Received encrypted DES key ({deskey_count} vals)")
+                    plaintext = decrypt(client_public_key, cp_deskey)
+                    print(f"[image_server] Decrypted DES key: '{plaintext}'")
+                    des_key = plaintext
 
 
                 elif message.startswith("IMAGE:"):
@@ -75,8 +99,21 @@ def main():
                     # TODO: Decrypt using DES
                     # TODO: Save as penguin_decrypted.jpg
                     # TODO: Flash LED
-                    pass
+                    decipher = des()
+                    message = message + "\t" + "\n" + buffer
+                    buffer = ""
+                    _, img = message.split(":", 1)
+                    img_count = len(img)
+                    print(f"[image_server] Received encrypted image ({img_count} values)")
+                    img = decipher.run_cbc(key=des_key, text=img, action=0, padding=True)
+                    img = img.encode('latin-1')
+                    with open("penguin_decrypted.jpg", "wb") as f:
+                        f.write(img)
+                    print("[image_server] Image decrypted and saved as penguin_decrypted.jpg")
 
+                    flash_led()
+
+                    
                 else:
                     print(f"[image_server] Unknown message: {message}")
     except KeyboardInterrupt:
